@@ -82,7 +82,7 @@ public class CommandManager {
             var flags = command.getFlags();
 
             if (command.getArguments().size() < action.arguments().length) {
-                System.err.printf("Para o comando %s está faltando argumentos%n", command.getCommand());
+                System.err.printf("The command %s is missing arguments%n", command.getCommand());
                 return;
             }
 

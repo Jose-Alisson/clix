@@ -12,15 +12,15 @@ public class Help {
 
     @Action
     public void listCommands(List<Argument> arguments, HashMap<String, Flag> flags) {
-            System.out.println(
-                    """
-                            USO: CLI [comando] [Argumentos] [Opções ou Flags]
-                            
-                            COMANDOS DISPONÍVEIS:
-                            """);
-            for (clix.Command command : CommandManager.commands.values()) {
-                System.out.printf("%-15s %s%s%n", command.getCommand(), String.join(", ", command.getArguments().stream().map(Argument::getName).toList()), String.join(",", command.getFlags().values().stream().map(f -> "--" + f.getFlag()).toList()));
-            }
+        System.out.println(
+                """
+                        USAGE: CLI [command] [Arguments] [Options or Flags]
+                        
+                        AVAILABLE COMMANDS:
+                        """);
+        for (clix.Command command : CommandManager.commands.values()) {
+            System.out.printf("%-15s %s%s%n", command.getCommand(), String.join(", ", command.getArguments().stream().map(Argument::getName).toList()), String.join(",", command.getFlags().values().stream().map(f -> "--" + f.getFlag()).toList()));
+        }
     }
 
 
