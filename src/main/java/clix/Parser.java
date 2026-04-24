@@ -23,6 +23,7 @@ public class Parser {
                 var flag = split[0].replace("-", "");
                 var value = new Flag(flag, split.length > 1 ? split[1] : null);
                 flagsMap.put(flag, value);
+                arguments.add(value);
             } else {
                 Argument argument = new Argument(args[index]);
                 arguments.add(argument);

@@ -1,5 +1,7 @@
 package clix;
 
+import clix.types.ArgumentType;
+
 public class Argument {
 
     private String name;
@@ -24,6 +26,10 @@ public class Argument {
         return name;
     }
 
+    public String getValue(){
+        return name;
+    }
+
     public void setName(String name) {
         this.name = name;
     }
@@ -34,5 +40,9 @@ public class Argument {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public ArgumentType getType(){
+        return ArgumentType.ARGUMENT;
     }
 }

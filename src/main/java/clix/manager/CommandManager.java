@@ -1,10 +1,10 @@
 package clix.manager;
 
 import clix.Argument;
-import clix.Flag;
 import clix.Help;
 import clix.Parser;
 import clix.annotations.*;
+import clix.manager.resolver.ParserTypeResolverManager;
 import org.reflections.Reflections;
 
 import java.lang.reflect.*;
@@ -13,12 +13,16 @@ import java.util.*;
 public class CommandManager {
 
     public static Map<String, clix.Command> commands = new HashMap<>();
+    public static ParserTypeResolverManager manager;
 
     private static boolean enabledHelp = false;
 
     public static void initialize(String pack) {
         Reflections reflect = new Reflections(pack);
         Set<Class<?>> classes = reflect.getTypesAnnotatedWith(Command.class);
+
+        Set<Class<?>> resolvers = reflect.getTypesAnnotatedWith(ResolverType.class);
+        manager = new ParserTypeResolverManager(resolvers);
 
         if(!reflect.getTypesAnnotatedWith(EnableHelp.class).isEmpty()){
             classes.add(Help.class);
@@ -32,8 +36,6 @@ public class CommandManager {
 
             for (Method method : clazz.getDeclaredMethods()) {
                 if (method.isAnnotationPresent(Action.class)) {
-//                    Action ac = method.getAnnotation(Action.class);
-//                    Command.SubCommand sub = new Command.SubCommand();
                     method.setAccessible(true);
                     Object instance;
 
@@ -45,23 +47,9 @@ public class CommandManager {
                     }
 
                     command.setAction(getAction(method, command, instance));
-
-//                    if (ac.subcommand().isEmpty()) {} else {
-//                        sub.setCommand(ann.command() + ":" + ac.subcommand());
-//                        sub.setAction(getAction(method, sub, instance));
-//                        commands.put(sub.getCommand(), sub);
-//                        command.setAction(getActionToListSubCommands(Arrays.stream(clazz.getDeclaredMethods())
-//                                .filter(m -> m.isAnnotationPresent(Action.class))
-//                                .toArray(Method[]::new)));
-//                    }
                 }
             }
-
-//            if (commands.get(command.getCommand()) == null) {
             commands.put(command.getCommand(), command);
-//            } else {
-//                System.err.printf("The command %s is defined%n", command.getCommand());
-//            }
         }
     }
 
@@ -79,7 +67,6 @@ public class CommandManager {
             List<Object> values = new ArrayList<>();
 
             var arguments = command.getArguments();
-            var flags = command.getFlags();
 
             if (command.getArguments().size() < action.arguments().length) {
                 System.err.printf("The command %s is missing arguments%n", command.getCommand());
@@ -97,48 +84,17 @@ public class CommandManager {
 
             for (int i = 0; i < params.length; i++) {
                 if (typesParams[i] instanceof ParameterizedType pt) {
-                    if (pt.getRawType() == List.class) {
-                        if (pt.getActualTypeArguments()[0] == Argument.class) {
-                            values.add(arguments);
-                        } else if (pt.getActualTypeArguments()[0] == Flag.class) {
-                            values.add(flags.values().stream().toList());
-                        }
-                    } else if (pt.getRawType() == HashMap.class || pt.getRawType() == Map.class) {
-                        if (pt.getActualTypeArguments()[0] == String.class && pt.getActualTypeArguments()[1] == Flag.class) {
-                            values.add(flags);
-                        }
-                    }
-                } else if (params[i].getType() == String.class){
-                    Parameter param = params[i];
-                    if(param.isNamePresent()) {
-                        var nameExist = false;
-                        for (int j = 0; j < action.arguments().length; j++) {
-                            if (param.getName().equals(action.arguments()[j].name())) {
-                                nameExist = true;
-                                values.add(arguments.get(j).getName());
-                            }
-                        }
-                        if(!nameExist){
-                            values.add(arguments.get(i).getName());
-                        }
+                    values.add(manager.get(pt.getRawType()).resolverTypes(pt.getActualTypeArguments(), arguments));
+                } else {
+                    Parameter parameter = params[i];
+                    if(parameter.isAnnotationPresent(Param.class)){
+                        Param param = parameter.getAnnotation(Param.class);
+                        int finalI = i;
+                        Arrays.stream(action.arguments()).filter(a -> param.name().equals(a.name())).findFirst().ifPresent(value -> {
+                            values.add(manager.get(parameter.getType()).resolver(arguments.get(finalI)));
+                        });
                     } else {
-                        values.add(arguments.get(i).getName());
-                    }
-                } else if(params[i].getType() == Argument.class){
-                    Parameter param = params[i];
-                    if(param.isNamePresent()) {
-                        var nameExist = false;
-                        for (int j = 0; j < action.arguments().length; j++) {
-                            if (param.getName().equals(action.arguments()[j].name())) {
-                                nameExist = true;
-                                values.add(new Argument(arguments.get(j).getName()));
-                            }
-                        }
-                        if(!nameExist){
-                            values.add(new Argument(arguments.get(i).getName()));
-                        }
-                    } else {
-                        values.add(new Argument(arguments.get(i).getName()));
+                        values.add(manager.get(parameter.getType()).resolver(arguments.get(i)));
                     }
                 }
             }
