@@ -9,6 +9,8 @@ import org.reflections.Reflections;
 
 import java.lang.reflect.*;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class CommandManager {
 
@@ -22,12 +24,19 @@ public class CommandManager {
         Set<Class<?>> classes = reflect.getTypesAnnotatedWith(Command.class);
 
         Set<Class<?>> resolvers = reflect.getTypesAnnotatedWith(ResolverType.class);
-        manager = new ParserTypeResolverManager(resolvers);
 
         if(!reflect.getTypesAnnotatedWith(EnableHelp.class).isEmpty()){
             classes.add(Help.class);
             enabledHelp = true;
         };
+
+        if(reflect.getTypesAnnotatedWith(EnableDefaultResolverTypes.class).isEmpty()){
+            Reflections clixReflect = new Reflections("clix");
+            Set<Class<?>> clixResolvers = clixReflect.getTypesAnnotatedWith(ResolverType.class);
+            resolvers = Stream.concat(resolvers.stream(), clixResolvers.stream()).collect(Collectors.toSet());
+        }
+
+        manager = new ParserTypeResolverManager(resolvers);
 
         for (Class<?> clazz : classes) {
             var ann = clazz.getAnnotation(Command.class);

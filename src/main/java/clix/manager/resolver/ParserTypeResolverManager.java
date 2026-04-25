@@ -31,4 +31,8 @@ public class ParserTypeResolverManager {
         }
         throw new IllegalArgumentException("The Resolver by type %s not found".formatted(type.getTypeName()));
     }
+
+    public List<ParserTypeResolver> getParserTypeResolvers() {
+        return parserTypeResolvers;
+    }
 }
