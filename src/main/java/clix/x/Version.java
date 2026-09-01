@@ -1,5 +1,6 @@
 package clix.x;
 
+import clix.Argument;
 import clix.annotations.Action;
 import clix.annotations.Command;
 
@@ -7,7 +8,8 @@ import clix.annotations.Command;
 public class Version {
 
     @Action
-    public void v() {
+    public void v(Argument argument) {
+
         System.out.println("1.0.1");
     }
 }

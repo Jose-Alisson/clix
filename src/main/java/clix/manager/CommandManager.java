@@ -4,6 +4,7 @@ import clix.Argument;
 import clix.Help;
 import clix.Parser;
 import clix.annotations.*;
+import clix.annotations.debug.ViewResolverTypes;
 import clix.manager.resolver.ParserTypeResolverManager;
 import org.reflections.Reflections;
 
@@ -30,10 +31,14 @@ public class CommandManager {
             enabledHelp = true;
         };
 
-        if(reflect.getTypesAnnotatedWith(EnableDefaultResolverTypes.class).isEmpty()){
+        if(!reflect.getTypesAnnotatedWith(EnableDefaultResolverTypes.class).isEmpty()){
             Reflections clixReflect = new Reflections("clix");
             Set<Class<?>> clixResolvers = clixReflect.getTypesAnnotatedWith(ResolverType.class);
             resolvers = Stream.concat(resolvers.stream(), clixResolvers.stream()).collect(Collectors.toSet());
+        }
+
+        if(!reflect.getTypesAnnotatedWith(ViewResolverTypes.class).isEmpty()){
+            System.out.println(resolvers.stream().map(Class::getSimpleName).collect(Collectors.joining(",")));
         }
 
         manager = new ParserTypeResolverManager(resolvers);
@@ -111,9 +116,7 @@ public class CommandManager {
             try {
                 method.invoke(instance, values.toArray());
             } catch (IllegalAccessException | InvocationTargetException e) {
-                if (e instanceof IllegalAccessException) {
-                    throw new RuntimeException(e);
-                }
+                    e.printStackTrace();
             }
         };
     }

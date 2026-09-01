@@ -18,7 +18,6 @@ public class FlagResolver implements ParserTypeResolver {
 
     @Override
     public Object resolver(Argument value) {
-        System.out.println(value);
         if(value.getType() == ArgumentType.FLAG) {
             return value;
         }

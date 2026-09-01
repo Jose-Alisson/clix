@@ -2,7 +2,7 @@ package clix;
 
 import clix.types.ArgumentType;
 
-public class Flag extends Argument{
+public class Flag extends Argument {
 
     private final String flag;
 
